@@ -16,3 +16,4 @@ CREATE TABLE `user` (
    UNIQUE KEY (`username`),
    UNIQUE KEY (`nick`, `type`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='用户登录信息表';
+INSERT INTO `user` VALUES (1, '管理员', 'admin', 'e160fa11757ed2883e890e483f1c6208', 'h6du1cxo', 1, 0, '2021-04-18 22:58:58', '2021-04-18 22:59:01');
