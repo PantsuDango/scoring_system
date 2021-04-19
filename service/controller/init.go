@@ -201,7 +201,7 @@ func (Controller Controller) LogIn(ctx *gin.Context) {
 		return
 	}
 
-	userInfo, err := Controller.ScoringDB.GetUserInfo(user.Username)
+	userInfo, err := Controller.ScoringDB.GetUserInfo(user.Username, user.Type)
 	if err != nil {
 		JSONFail(ctx, http.StatusOK, AccessDBError, "Username does not exist.", gin.H{
 			"Code":    "InvalidQuery",

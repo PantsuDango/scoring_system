@@ -4,9 +4,9 @@ import "scoring_system/model/tables"
 
 type ScoringDB struct{}
 
-func (ScoringDB) GetUserInfo(UserName string) (tables.User, error) {
+func (ScoringDB) GetUserInfo(UserName string, Type int) (tables.User, error) {
 	var user tables.User
-	err := exeDB.Where("username = ? AND status= 0 ", UserName).First(&user).Error
+	err := exeDB.Where("username = ? AND type = ? AND status= 0 ", UserName, Type).First(&user).Error
 	return user, err
 }
 
