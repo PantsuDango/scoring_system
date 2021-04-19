@@ -1,5 +1,6 @@
 #!/bin/bash
 
+git pull
 path=$PWD
 
 cd $path/service
