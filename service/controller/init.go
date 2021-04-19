@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	uuid "github.com/satori/go.uuid"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"scoring_system/db"
 	"scoring_system/model/params"
@@ -14,8 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	uuid "github.com/satori/go.uuid"
-	"github.com/dgrijalva/jwt-go"
 )
 
 const (
@@ -43,17 +44,18 @@ const (
 )
 
 type Controller struct {
-	ScoringDB  db.ScoringDB
+	ScoringDB db.ScoringDB
 }
 
 type Handler func(*gin.Context, tables.User)
+
 var HandlerMap map[string]Handler
 
 // Module and Action map
 func init() {
 	Controller := new(Controller)
-	HandlerMap = map[string]Handler {
-		"Controller.InitTest":  Controller.InitTest,
+	HandlerMap = map[string]Handler{
+		"Controller.InitTest": Controller.InitTest,
 	}
 }
 
@@ -130,6 +132,8 @@ func (ct Controller) Handle(ctx *gin.Context) {
 
 	if index.Action == "LogIn" {
 		ct_new.LogIn(ctx)
+	} else if index.Action == "Register" {
+		ct_new.Register(ctx)
 	} else {
 		modAndAct := fmt.Sprintf("%s.%s", index.Module, index.Action)
 		var user tables.User
@@ -144,7 +148,7 @@ func (ct Controller) Handle(ctx *gin.Context) {
 			auth := ctx.DefaultQuery("Bearer", "")
 
 			if auth == "" {
-				JSONFail(ctx, http.StatusOK, TokenEmpty, "Need Token. Please login again.", gin.H {
+				JSONFail(ctx, http.StatusOK, TokenEmpty, "Need Token. Please login again.", gin.H{
 					"Code":    "TokenEmpty",
 					"Message": "Request need token.",
 				})
@@ -152,9 +156,9 @@ func (ct Controller) Handle(ctx *gin.Context) {
 			}
 			token, err := parseToken(auth)
 			if err != nil {
-				JSONFail(ctx, http.StatusOK, TokenError, "Token error.", gin.H {
+				JSONFail(ctx, http.StatusOK, TokenError, "Token error.", gin.H{
 					"Code":    "TokenError",
-					"Message":  err.Error(),
+					"Message": err.Error(),
 				})
 				return
 			}
@@ -162,7 +166,7 @@ func (ct Controller) Handle(ctx *gin.Context) {
 
 			user, err = ct.ScoringDB.QueryUserById(userID)
 			if err != nil {
-				JSONFail(ctx, http.StatusOK, AccessDBError, "Access operator table errow.", gin.H {
+				JSONFail(ctx, http.StatusOK, AccessDBError, "Access operator table errow.", gin.H{
 					"Code":    "InvalidUser",
 					"Message": err.Error(),
 				})
@@ -177,7 +181,7 @@ func (ct Controller) Handle(ctx *gin.Context) {
 		if ok {
 			handler(ctx, user)
 		} else {
-			JSONFail(ctx, http.StatusOK, IllegalAction, "Illegal action.", gin.H {
+			JSONFail(ctx, http.StatusOK, IllegalAction, "Illegal action.", gin.H{
 				"Code":    "InvalidAction",
 				"Message": fmt.Sprintf("%s is not expected", modAndAct),
 			})
@@ -199,7 +203,7 @@ func (Controller Controller) LogIn(ctx *gin.Context) {
 
 	userInfo, err := Controller.ScoringDB.GetUserInfo(user.Username)
 	if err != nil {
-		JSONFail(ctx, http.StatusOK, AccessDBError, "Access group_info table error.", gin.H{
+		JSONFail(ctx, http.StatusOK, AccessDBError, "Username does not exist.", gin.H{
 			"Code":    "InvalidQuery",
 			"Message": err.Error(),
 		})
@@ -211,8 +215,8 @@ func (Controller Controller) LogIn(ctx *gin.Context) {
 	md5Password := fmt.Sprintf("%x", md5.Sum([]byte(s)))
 	if md5Password == userInfo.Password {
 		// Create Token
-		expiresTime := time.Now().Unix() + int64(60 * 60 * 24)
-		claims := jwt.StandardClaims {
+		expiresTime := time.Now().Unix() + int64(60*60*24)
+		claims := jwt.StandardClaims{
 			Audience:  userInfo.Username,
 			ExpiresAt: expiresTime,
 			Id:        strconv.Itoa(userInfo.ID),
@@ -230,21 +234,21 @@ func (Controller Controller) LogIn(ctx *gin.Context) {
 		if err == nil {
 			ctx.Set("user", userInfo)
 			JSONSuccess(ctx, http.StatusOK, gin.H{
-				"Bearer":      token,
-				"Nick":        userInfo.Nick,
-				"Username":    userInfo.Username,
-				"ID":          userInfo.ID,
-				"Type":        userInfo.Type,
+				"Bearer":   token,
+				"Nick":     userInfo.Nick,
+				"Username": userInfo.Username,
+				"ID":       userInfo.ID,
+				"Type":     userInfo.Type,
 			})
-		// Token鉴权失败
+			// Token鉴权失败
 		} else {
 			JSONFail(ctx, http.StatusOK, TokenExpire, "Token expired.", gin.H{
 				"Token":   "Login failed.",
-				"Message":  err.Error(),
+				"Message": err.Error(),
 			})
 			return
 		}
-	// 密码错误
+		// 密码错误
 	} else {
 		JSONFail(ctx, http.StatusOK, PasswordError, "Password error.", gin.H{
 			"Token":   "PasswordError.",
@@ -252,6 +256,52 @@ func (Controller Controller) LogIn(ctx *gin.Context) {
 		})
 		return
 	}
+}
+
+// 注册接口
+func (Controller Controller) Register(ctx *gin.Context) {
+
+	var operator tables.User
+	if err := ctx.ShouldBindBodyWith(&operator, binding.JSON); err != nil {
+		JSONFail(ctx, http.StatusOK, IllegalRequestParameter, "Invalid JSON or Illegal request parameter.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": err.Error(),
+		})
+		return
+	}
+
+	if len(operator.Nick) == 0 || len(operator.Username) == 0 || len(operator.Password) == 0 || operator.Type == 0 {
+		JSONFail(ctx, http.StatusOK, IllegalRequestParameter, "Illegal request parameter.", gin.H{
+			"Code":    "IllegalRequestParameter",
+			"Message": "Invalid JSON or Illegal request parameter.",
+		})
+		return
+	}
+
+	// Create MD5 password
+	operator.Salt = GetRandomString(8)
+	s := operator.Password + operator.Salt
+	operator.Password = fmt.Sprintf("%x", md5.Sum([]byte(s)))
+
+	err := Controller.ScoringDB.AddUser(operator)
+	if err != nil {
+		index := strings.Index(err.Error(), "1062")
+		if index > 0 {
+			JSONFail(ctx, http.StatusOK, AccessDBError, "Duplicate data.", gin.H{
+				"Code":    "AccessDBError",
+				"Message": "Duplicate data.",
+			})
+			return
+		} else {
+			JSONFail(ctx, http.StatusOK, AccessDBError, "Access operator_info table error.", gin.H{
+				"Code":    "AccessDBError",
+				"Message": err.Error(),
+			})
+		}
+		return
+	}
+
+	JSONSuccess(ctx, http.StatusOK, "Success")
 }
 
 // 创建鉴权token
@@ -269,15 +319,15 @@ func createToken(auth string) (string, error) {
 	}
 
 	// Create Token
-	expiresTime := time.Now().Unix() + int64(60 * 60 * 24)
+	expiresTime := time.Now().Unix() + int64(60*60*24)
 	claims := jwt.StandardClaims{
-		Audience:  user.Username, // User name
-		ExpiresAt: expiresTime,   //
+		Audience:  user.Username,         // User name
+		ExpiresAt: expiresTime,           //
 		Id:        strconv.Itoa(user.ID), // User Id
 		IssuedAt:  time.Now().Unix(),     // now
-		Issuer:    "Controller",      // ManualSupplier
+		Issuer:    "Controller",          // ManualSupplier
 		NotBefore: time.Now().Unix(),     // current
-		Subject:   "LogIn",       // purpose
+		Subject:   "LogIn",               // purpose
 	}
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -328,4 +378,15 @@ func parseToken(token string) (*jwt.StandardClaims, error) {
 		}
 	}
 	return nil, err
+}
+
+func GetRandomString(l int) string {
+	str := "0123456789abcdefghijklmnopqrstuvwxyz"
+	bytes := []byte(str)
+	result := []byte{}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < l; i++ {
+		result = append(result, bytes[r.Intn(len(bytes))])
+	}
+	return string(result)
 }
