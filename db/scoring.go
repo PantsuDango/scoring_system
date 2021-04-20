@@ -29,3 +29,13 @@ func (ScoringDB) QueryAllUser() []result.ListUser {
 	exeDB.Where(`status = 0`).Find(&user)
 	return user
 }
+
+func (ScoringDB) CreateProject(project *tables.Project) error {
+	err := exeDB.Create(&project).Error
+	return err
+}
+
+func (ScoringDB) CreateProjectUserMap(project_user_map *tables.ProjectUserMap) error {
+	err := exeDB.Create(&project_user_map).Error
+	return err
+}
