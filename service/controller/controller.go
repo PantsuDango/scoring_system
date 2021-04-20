@@ -74,6 +74,10 @@ func (Controller Controller) AddProject(ctx *gin.Context, user tables.User) {
 		project_user_map.ProjectId = project.ID
 		project_user_map.UserId = PlayerId
 		project_user_map.Type = 3
+		user, _ := Controller.ScoringDB.QueryUserById(PlayerId)
+		if user.Type != 3 {
+			continue
+		}
 		err = Controller.ScoringDB.CreateProjectUserMap(&project_user_map)
 	}
 
@@ -83,6 +87,10 @@ func (Controller Controller) AddProject(ctx *gin.Context, user tables.User) {
 		project_user_map.ProjectId = project.ID
 		project_user_map.UserId = JudgesId
 		project_user_map.Type = 2
+		user, _ := Controller.ScoringDB.QueryUserById(JudgesId)
+		if user.Type != 2 {
+			continue
+		}
 		err = Controller.ScoringDB.CreateProjectUserMap(&project_user_map)
 	}
 
@@ -97,7 +105,7 @@ func (Controller Controller) AddProject(ctx *gin.Context, user tables.User) {
 	JSONSuccess(ctx, http.StatusOK, "Success")
 }
 
-// 新建项目
+// 查询所有项目
 func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 
 	// 如果不是主账号
@@ -146,4 +154,36 @@ func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 	} // 结束循环
 
 	JSONSuccess(ctx, http.StatusOK, ListProjectResult)
+}
+
+// 新建项目
+func (Controller Controller) ProjectInfo(ctx *gin.Context, user tables.User) {
+
+	var ProjectInfoResult []result.ProjectInfo
+
+	project_user_maps := Controller.ScoringDB.SelectProjectUserMapByUserId(user.ID)
+	for _, project_user_map := range project_user_maps {
+		// 查询项目信息
+		var Project result.ProjectInfo
+		project := Controller.ScoringDB.SelectProjectByUserId(project_user_map.ProjectId)
+		Project.ID = project.ID
+		Project.Name = project.Name
+		Project.Content = project.Content
+		Project.CreatedAt = project.CreatedAt.Format("2006-01-02 15:04:05")
+		// 查询选手信息
+		tmps := Controller.ScoringDB.SelectProjectUserMapToPlayer(project.ID)
+		for _, tmp := range tmps {
+			var PlayerInfo result.PlayerInfo
+			player, _ := Controller.ScoringDB.QueryUserById(tmp.UserId)
+			PlayerInfo.ID = player.ID
+			PlayerInfo.Username = player.Username
+			PlayerInfo.Nick = player.Nick
+			score := Controller.ScoringDB.SelectScore(project.ID, player.ID)
+			PlayerInfo.Score = score.Score
+			Project.PlayerInfo = append(Project.PlayerInfo, PlayerInfo)
+		}
+		ProjectInfoResult = append(ProjectInfoResult, Project)
+	}
+
+	JSONSuccess(ctx, http.StatusOK, ProjectInfoResult)
 }

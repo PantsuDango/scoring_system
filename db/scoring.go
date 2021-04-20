@@ -57,3 +57,21 @@ func (ScoringDB) SelectScore(project_id, player_id int) tables.Score {
 	exeDB.Where(`project_id = ? AND player_id = ?`, project_id, player_id).Find(&score)
 	return score
 }
+
+func (ScoringDB) SelectProjectUserMapByUserId(user_id int) []tables.ProjectUserMap {
+	var project_user_map []tables.ProjectUserMap
+	exeDB.Where(`user_id = ?`, user_id).Find(&project_user_map)
+	return project_user_map
+}
+
+func (ScoringDB) SelectProjectByUserId(id int) tables.Project {
+	var project tables.Project
+	exeDB.Where(`id = ?`, id).Find(&project)
+	return project
+}
+
+func (ScoringDB) SelectProjectUserMapToPlayer(project_id int) []tables.ProjectUserMap {
+	var project_user_map []tables.ProjectUserMap
+	exeDB.Where(`project_id = ? and type = 3`, project_id).Find(&project_user_map)
+	return project_user_map
+}

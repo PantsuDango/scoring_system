@@ -32,3 +32,11 @@ type JudgesInfo struct {
 	Nick     string `json:"Nick"     form:"Nick"`
 	Username string `json:"Username" form:"Username"`
 }
+
+type ProjectInfo struct {
+	ID         int          `json:"ID"          form:"ID"`
+	Name       string       `json:"Name"        form:"Name"`
+	Content    string       `json:"Content"     form:"Content"`
+	CreatedAt  string       `json:"CreateTime"  form:"CreateTime"`
+	PlayerInfo []PlayerInfo `json:"PlayerInfo"  form:"PlayerInfo"`
+}
