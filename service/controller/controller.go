@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
 	"scoring_system/model/params"
+	"scoring_system/model/result"
 	"scoring_system/model/tables"
 )
 
@@ -94,4 +95,55 @@ func (Controller Controller) AddProject(ctx *gin.Context, user tables.User) {
 	}
 
 	JSONSuccess(ctx, http.StatusOK, "Success")
+}
+
+// 新建项目
+func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
+
+	// 如果不是主账号
+	if user.Type != 1 {
+		JSONFail(ctx, http.StatusOK, AccessDeny, "user type error.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": "user type error",
+		})
+		return
+	}
+
+	var ListProjectResult []result.ListProject
+	ListProjectResult = make([]result.ListProject, 0)
+
+	projects := Controller.ScoringDB.SelectAllProject()
+	for _, project := range projects {
+		var ListProject result.ListProject
+
+		ListProject.ID = project.ID
+		ListProject.Content = project.Content
+		ListProject.Name = project.Name
+		ListProject.CreatedAt = project.CreatedAt.Format("2006-01-02 15:04:05")
+
+		project_user_maps := Controller.ScoringDB.SelectProjectUserMap(project.ID)
+		for _, project_user_map := range project_user_maps {
+			if project_user_map.Type == 2 {
+				var PlayerInfo result.PlayerInfo
+				player, _ := Controller.ScoringDB.QueryUserById(project_user_map.UserId)
+				PlayerInfo.ID = player.ID
+				PlayerInfo.Username = player.Username
+				PlayerInfo.Nick = player.Nick
+				score := Controller.ScoringDB.SelectScore(project.ID, player.ID)
+				PlayerInfo.Score = score.Score
+				ListProject.PlayerInfo = append(ListProject.PlayerInfo, PlayerInfo)
+			} else {
+				var JudgesInfo result.JudgesInfo
+				judges, _ := Controller.ScoringDB.QueryUserById(project_user_map.UserId)
+				JudgesInfo.ID = judges.ID
+				JudgesInfo.Username = judges.Username
+				JudgesInfo.Nick = judges.Nick
+				ListProject.JudgesInfo = append(ListProject.JudgesInfo, JudgesInfo)
+			}
+		} // 循环结束
+
+		ListProjectResult = append(ListProjectResult, ListProject)
+	} // 结束循环
+
+	JSONSuccess(ctx, http.StatusOK, ListProjectResult)
 }

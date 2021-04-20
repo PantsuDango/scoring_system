@@ -39,3 +39,21 @@ func (ScoringDB) CreateProjectUserMap(project_user_map *tables.ProjectUserMap) e
 	err := exeDB.Create(&project_user_map).Error
 	return err
 }
+
+func (ScoringDB) SelectAllProject() []tables.Project {
+	var project []tables.Project
+	exeDB.Find(&project)
+	return project
+}
+
+func (ScoringDB) SelectProjectUserMap(project_id int) []tables.ProjectUserMap {
+	var project_user_map []tables.ProjectUserMap
+	exeDB.Where(`project_id = ?`, project_id).Find(&project_user_map)
+	return project_user_map
+}
+
+func (ScoringDB) SelectScore(project_id, player_id int) tables.Score {
+	var score tables.Score
+	exeDB.Where(`project_id = ? AND player_id = ?`, project_id, player_id).Find(&score)
+	return score
+}
