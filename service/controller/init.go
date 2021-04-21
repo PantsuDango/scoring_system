@@ -60,6 +60,7 @@ func init() {
 		"Controller.ListProject": Controller.ListProject,
 		"Controller.ProjectInfo": Controller.ProjectInfo,
 		"Controller.Scoring":     Controller.Scoring,
+		"Controller.ModifyUser":  Controller.ModifyUser,
 	}
 }
 

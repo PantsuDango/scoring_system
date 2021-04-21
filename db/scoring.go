@@ -80,3 +80,8 @@ func (ScoringDB) CreateScore(score tables.Score) error {
 	err := exeDB.Create(&score).Error
 	return err
 }
+
+func (ScoringDB) ModifyUser(user tables.User) error {
+	err := exeDB.Save(&user).Error
+	return err
+}

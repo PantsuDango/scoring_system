@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
@@ -217,6 +219,40 @@ func (Controller Controller) Scoring(ctx *gin.Context, user tables.User) {
 	err := Controller.ScoringDB.CreateScore(score)
 	if err != nil {
 		JSONFail(ctx, http.StatusOK, AccessDeny, "create score fail.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": err.Error(),
+		})
+		return
+	}
+
+	JSONSuccess(ctx, http.StatusOK, "Success")
+}
+
+// 打分
+func (Controller Controller) ModifyUser(ctx *gin.Context, user tables.User) {
+
+	var operator tables.User
+	if err := ctx.ShouldBindBodyWith(&operator, binding.JSON); err != nil {
+		JSONFail(ctx, http.StatusOK, IllegalRequestParameter, "Invalid JSON or Illegal request parameter.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": err.Error(),
+		})
+		return
+	}
+
+	if len(operator.Password) > 0 {
+		user.Salt = GetRandomString(8)
+		s := operator.Password + user.Salt
+		user.Password = fmt.Sprintf("%x", md5.Sum([]byte(s)))
+	}
+
+	if len(operator.Nick) > 0 {
+		user.Nick = operator.Nick
+	}
+
+	err := Controller.ScoringDB.ModifyUser(user)
+	if err != nil {
+		JSONFail(ctx, http.StatusOK, AccessDeny, "update user fail.", gin.H{
 			"Code":    "InvalidJSON",
 			"Message": err.Error(),
 		})
