@@ -75,3 +75,8 @@ func (ScoringDB) SelectProjectUserMapToPlayer(project_id int) []tables.ProjectUs
 	exeDB.Where(`project_id = ? and type = 3`, project_id).Find(&project_user_map)
 	return project_user_map
 }
+
+func (ScoringDB) CreateScore(score tables.Score) error {
+	err := exeDB.Create(&score).Error
+	return err
+}

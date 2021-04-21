@@ -11,3 +11,9 @@ type AddProjectParams struct {
 	PlayerId []int  `json:"PlayerId" form:"PlayerId" binding:"required"`
 	JudgesId []int  `json:"JudgesId" form:"JudgesId" binding:"required"`
 }
+
+type ScoringParams struct {
+	ProjectId int `json:"ProjectId"  form:"ProjectId"  binding:"required"`
+	PlayerId  int `json:"PlayerId"  form:"PlayerId"  binding:"required"`
+	Score     int `json:"Score"  form:"Score"  binding:"required"`
+}

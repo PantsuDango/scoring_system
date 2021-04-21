@@ -32,8 +32,8 @@ func (Project) TableName() string {
 
 type ProjectUserMap struct {
 	ID        int       `json:"ID"          form:"ID"          gorm:"column:id"`
-	ProjectId int       `json:"ProjectId"   form:"ProjectId"   gorm:"project_id:project_id"`
-	UserId    int       `json:"UserId"      form:"UserId"      gorm:"project_id:user_id"`
+	ProjectId int       `json:"ProjectId"   form:"ProjectId"   gorm:"column:project_id"`
+	UserId    int       `json:"UserId"      form:"UserId"      gorm:"column:user_id"`
 	Type      int       `json:"Type"        form:"Type"        gorm:"column:type"`
 	CreatedAt time.Time `json:"CreateTime"  form:"CreateTime"  gorm:"column:createtime"`
 	UpdatedAt time.Time `json:"UpdateTime"  form:"UpdateTime"  gorm:"column:lastupdate"`
@@ -45,10 +45,10 @@ func (ProjectUserMap) TableName() string {
 
 type Score struct {
 	ID        int       `json:"ID"          form:"ID"          gorm:"column:id"`
-	ProjectId int       `json:"ProjectId"   form:"ProjectId"   gorm:"project_id:project_id"`
-	PlayerId  int       `json:"UserId"      form:"UserId"      gorm:"project_id:player_id"`
+	ProjectId int       `json:"ProjectId"   form:"ProjectId"   gorm:"column:project_id"`
+	PlayerId  int       `json:"UserId"      form:"UserId"      gorm:"column:player_id"`
 	Score     int       `json:"Score"       form:"Score"       gorm:"column:score"`
-	JudgesId  int       `json:"JudgesId"    form:"JudgesId"    gorm:"project_id:judges_id"`
+	JudgesId  int       `json:"JudgesId"    form:"JudgesId"    gorm:"column:judges_id"`
 	CreatedAt time.Time `json:"CreateTime"  form:"CreateTime"  gorm:"column:createtime"`
 	UpdatedAt time.Time `json:"UpdateTime"  form:"UpdateTime"  gorm:"column:lastupdate"`
 }

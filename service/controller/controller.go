@@ -187,3 +187,41 @@ func (Controller Controller) ProjectInfo(ctx *gin.Context, user tables.User) {
 
 	JSONSuccess(ctx, http.StatusOK, ProjectInfoResult)
 }
+
+// 打分
+func (Controller Controller) Scoring(ctx *gin.Context, user tables.User) {
+
+	var ScoringParams params.ScoringParams
+	if err := ctx.ShouldBindBodyWith(&ScoringParams, binding.JSON); err != nil {
+		JSONFail(ctx, http.StatusOK, IllegalRequestParameter, "Invalid JSON or Illegal request parameter.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": err.Error(),
+		})
+		return
+	}
+
+	// 如果不是主账号
+	if user.Type != 2 {
+		JSONFail(ctx, http.StatusOK, AccessDeny, "user type error.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": "user type error",
+		})
+		return
+	}
+
+	var score tables.Score
+	score.ProjectId = ScoringParams.ProjectId
+	score.PlayerId = ScoringParams.ProjectId
+	score.Score = ScoringParams.Score
+	score.JudgesId = user.ID
+	err := Controller.ScoringDB.CreateScore(score)
+	if err != nil {
+		JSONFail(ctx, http.StatusOK, AccessDeny, "create score fail.", gin.H{
+			"Code":    "InvalidJSON",
+			"Message": err.Error(),
+		})
+		return
+	}
+
+	JSONSuccess(ctx, http.StatusOK, "Success")
+}
