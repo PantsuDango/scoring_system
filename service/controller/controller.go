@@ -9,6 +9,7 @@ import (
 	"scoring_system/model/params"
 	"scoring_system/model/result"
 	"scoring_system/model/tables"
+	"sort"
 )
 
 // 查询所有用户
@@ -158,6 +159,16 @@ func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 	JSONSuccess(ctx, http.StatusOK, ListProjectResult)
 }
 
+func SortByAge(u []result.PlayerInfo) []result.PlayerInfo {
+
+	sort.Slice(u, func(i, j int) bool {
+		return u[i].Score > u[j].Score
+	})
+
+	return u
+
+}
+
 // 新建项目
 func (Controller Controller) ProjectInfo(ctx *gin.Context, user tables.User) {
 
@@ -184,6 +195,7 @@ func (Controller Controller) ProjectInfo(ctx *gin.Context, user tables.User) {
 			PlayerInfo.Score = score.Score
 			Project.PlayerInfo = append(Project.PlayerInfo, PlayerInfo)
 		}
+		Project.PlayerInfo = SortByAge(Project.PlayerInfo)
 		ProjectInfoResult = append(ProjectInfoResult, Project)
 	}
 
