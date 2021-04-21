@@ -224,7 +224,7 @@ func (Controller Controller) Scoring(ctx *gin.Context, user tables.User) {
 
 	var err error
 	for _, PlayerInfo := range ScoringParams.PlayerInfo {
-		var score tables.Score
+		score := Controller.ScoringDB.SelectScore(ScoringParams.ProjectId, PlayerInfo.PlayerId)
 		score.ProjectId = ScoringParams.ProjectId
 		score.PlayerId = PlayerInfo.PlayerId
 		score.Score = PlayerInfo.Score

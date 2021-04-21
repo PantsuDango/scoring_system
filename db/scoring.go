@@ -77,7 +77,7 @@ func (ScoringDB) SelectProjectUserMapToPlayer(project_id int) []tables.ProjectUs
 }
 
 func (ScoringDB) CreateScore(score tables.Score) error {
-	err := exeDB.Create(&score).Error
+	err := exeDB.Save(&score).Error
 	return err
 }
 
