@@ -152,7 +152,7 @@ func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 				ListProject.JudgesInfo = append(ListProject.JudgesInfo, JudgesInfo)
 			}
 		} // 循环结束
-
+		ListProject.PlayerInfo = SortByAge(ListProject.PlayerInfo)
 		ListProjectResult = append(ListProjectResult, ListProject)
 	} // 结束循环
 
@@ -166,7 +166,6 @@ func SortByAge(u []result.PlayerInfo) []result.PlayerInfo {
 	})
 
 	return u
-
 }
 
 // 新建项目
