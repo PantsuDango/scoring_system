@@ -254,7 +254,7 @@ func (Controller Controller) ModifyUser(ctx *gin.Context, user tables.User) {
 		return
 	}
 
-	if operator.OldPassword != operator.Password {
+	if len(operator.OldPassword) == 0 || (operator.OldPassword+user.Salt) != user.Password {
 		JSONFail(ctx, http.StatusOK, AccessDeny, "OldPassword error.", gin.H{
 			"Code":    "InvalidJSON",
 			"Message": "OldPassword error.",
