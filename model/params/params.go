@@ -13,7 +13,7 @@ type AddProjectParams struct {
 }
 
 type ScoringParams struct {
-	ProjectId  int          `json:"ID"  form:"ID"  binding:"required"`
+	ProjectId  int          `json:"ProjectId"  form:"ProjectId"  binding:"required"`
 	PlayerInfo []PlayerInfo `json:"PlayerInfo"  form:"PlayerInfo"  binding:"required"`
 }
 
