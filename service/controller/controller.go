@@ -222,12 +222,15 @@ func (Controller Controller) Scoring(ctx *gin.Context, user tables.User) {
 		return
 	}
 
-	var score tables.Score
-	score.ProjectId = ScoringParams.ProjectId
-	score.PlayerId = ScoringParams.ProjectId
-	score.Score = ScoringParams.Score
-	score.JudgesId = user.ID
-	err := Controller.ScoringDB.CreateScore(score)
+	var err error
+	for _, PlayerInfo := range ScoringParams.PlayerInfo {
+		var score tables.Score
+		score.ProjectId = ScoringParams.ProjectId
+		score.PlayerId = PlayerInfo.PlayerId
+		score.Score = PlayerInfo.Score
+		score.JudgesId = user.ID
+		err = Controller.ScoringDB.CreateScore(score)
+	}
 	if err != nil {
 		JSONFail(ctx, http.StatusOK, AccessDeny, "create score fail.", gin.H{
 			"Code":    "InvalidJSON",
