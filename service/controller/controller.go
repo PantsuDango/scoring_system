@@ -245,7 +245,7 @@ func (Controller Controller) Scoring(ctx *gin.Context, user tables.User) {
 // 打分
 func (Controller Controller) ModifyUser(ctx *gin.Context, user tables.User) {
 
-	var operator tables.User
+	var operator tables.OladUser
 	if err := ctx.ShouldBindBodyWith(&operator, binding.JSON); err != nil {
 		JSONFail(ctx, http.StatusOK, IllegalRequestParameter, "Invalid JSON or Illegal request parameter.", gin.H{
 			"Code":    "InvalidJSON",
