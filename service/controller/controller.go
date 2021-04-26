@@ -143,14 +143,21 @@ func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 				PlayerInfo.ID = player.ID
 				PlayerInfo.Username = player.Username
 				PlayerInfo.Nick = player.Nick
-				score := Controller.ScoringDB.SelectScore2(project.ID, player.ID)
-				var count int
-				for _, val := range score {
-					count += val.Score
+
+				score, count := Controller.ScoringDB.SelectScore2(project.ID, player.ID)
+				if count == 0 {
+					PlayerInfo.Score = 0
+				} else {
+					var count int
+					for _, val := range score {
+						count += val.Score
+					}
+					fmt.Println(count)
+					value := float64(count) / float64(len(score))
+					value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
+					PlayerInfo.Score = value
 				}
-				value := float64(count) / float64(len(score))
-				value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
-				PlayerInfo.Score = value
+
 				ListProject.PlayerInfo = append(ListProject.PlayerInfo, PlayerInfo)
 			} else {
 				var JudgesInfo result.JudgesInfo
@@ -199,14 +206,21 @@ func (Controller Controller) ProjectInfo(ctx *gin.Context, user tables.User) {
 			PlayerInfo.ID = player.ID
 			PlayerInfo.Username = player.Username
 			PlayerInfo.Nick = player.Nick
-			score := Controller.ScoringDB.SelectScore2(project.ID, player.ID)
-			var count int
-			for _, val := range score {
-				count += val.Score
+
+			score, count := Controller.ScoringDB.SelectScore2(project.ID, player.ID)
+			if count == 0 {
+				PlayerInfo.Score = 0
+			} else {
+				var count int
+				for _, val := range score {
+					count += val.Score
+				}
+				fmt.Println(count)
+				value := float64(count) / float64(len(score))
+				value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
+				PlayerInfo.Score = value
 			}
-			value := float64(count) / float64(len(score))
-			value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
-			PlayerInfo.Score = value
+
 			Project.PlayerInfo = append(Project.PlayerInfo, PlayerInfo)
 		}
 		Project.PlayerInfo = SortByAge(Project.PlayerInfo)

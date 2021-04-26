@@ -58,10 +58,11 @@ func (ScoringDB) SelectScore(project_id, player_id, judges_id int) tables.Score 
 	return score
 }
 
-func (ScoringDB) SelectScore2(project_id, player_id int) []tables.Score {
+func (ScoringDB) SelectScore2(project_id, player_id int) ([]tables.Score, int) {
 	var score []tables.Score
-	exeDB.Where(`project_id = ? AND player_id = ?`, project_id, player_id).Find(&score)
-	return score
+	var count int
+	exeDB.Where(`project_id = ? AND player_id = ?`, project_id, player_id).Find(&score).Count(&count)
+	return score, count
 }
 
 func (ScoringDB) SelectProjectUserMapByUserId(user_id int) []tables.ProjectUserMap {
