@@ -21,10 +21,10 @@ type ListProject struct {
 }
 
 type PlayerInfo struct {
-	ID       int    `json:"ID"        form:"ID"`
-	Nick     string `json:"Nick"      form:"Nick"`
-	Username string `json:"Username"  form:"Username"`
-	Score    int    `json:"Score"     form:"Score"`
+	ID       int     `json:"ID"        form:"ID"`
+	Nick     string  `json:"Nick"      form:"Nick"`
+	Username string  `json:"Username"  form:"Username"`
+	Score    float64 `json:"Score"     form:"Score"`
 }
 
 type JudgesInfo struct {

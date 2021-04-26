@@ -52,8 +52,14 @@ func (ScoringDB) SelectProjectUserMap(project_id int) []tables.ProjectUserMap {
 	return project_user_map
 }
 
-func (ScoringDB) SelectScore(project_id, player_id int) tables.Score {
+func (ScoringDB) SelectScore(project_id, player_id, judges_id int) tables.Score {
 	var score tables.Score
+	exeDB.Where(`project_id = ? AND player_id = ? AND judges_id = ?`, project_id, player_id, judges_id).Find(&score)
+	return score
+}
+
+func (ScoringDB) SelectScore2(project_id, player_id int) []tables.Score {
+	var score []tables.Score
 	exeDB.Where(`project_id = ? AND player_id = ?`, project_id, player_id).Find(&score)
 	return score
 }

@@ -10,6 +10,7 @@ import (
 	"scoring_system/model/result"
 	"scoring_system/model/tables"
 	"sort"
+	"strconv"
 )
 
 // 查询所有用户
@@ -126,6 +127,8 @@ func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 	projects := Controller.ScoringDB.SelectAllProject()
 	for _, project := range projects {
 		var ListProject result.ListProject
+		ListProject.PlayerInfo = make([]result.PlayerInfo, 0)
+		ListProject.JudgesInfo = make([]result.JudgesInfo, 0)
 
 		ListProject.ID = project.ID
 		ListProject.Content = project.Content
@@ -134,14 +137,20 @@ func (Controller Controller) ListProject(ctx *gin.Context, user tables.User) {
 
 		project_user_maps := Controller.ScoringDB.SelectProjectUserMap(project.ID)
 		for _, project_user_map := range project_user_maps {
-			if project_user_map.Type == 2 {
+			if project_user_map.Type == 3 {
 				var PlayerInfo result.PlayerInfo
 				player, _ := Controller.ScoringDB.QueryUserById(project_user_map.UserId)
 				PlayerInfo.ID = player.ID
 				PlayerInfo.Username = player.Username
 				PlayerInfo.Nick = player.Nick
-				score := Controller.ScoringDB.SelectScore(project.ID, player.ID)
-				PlayerInfo.Score = score.Score
+				score := Controller.ScoringDB.SelectScore2(project.ID, player.ID)
+				var count int
+				for _, val := range score {
+					count += val.Score
+				}
+				value := float64(count) / float64(len(score))
+				value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
+				PlayerInfo.Score = value
 				ListProject.PlayerInfo = append(ListProject.PlayerInfo, PlayerInfo)
 			} else {
 				var JudgesInfo result.JudgesInfo
@@ -190,8 +199,14 @@ func (Controller Controller) ProjectInfo(ctx *gin.Context, user tables.User) {
 			PlayerInfo.ID = player.ID
 			PlayerInfo.Username = player.Username
 			PlayerInfo.Nick = player.Nick
-			score := Controller.ScoringDB.SelectScore(project.ID, player.ID)
-			PlayerInfo.Score = score.Score
+			score := Controller.ScoringDB.SelectScore2(project.ID, player.ID)
+			var count int
+			for _, val := range score {
+				count += val.Score
+			}
+			value := float64(count) / float64(len(score))
+			value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value), 64)
+			PlayerInfo.Score = value
 			Project.PlayerInfo = append(Project.PlayerInfo, PlayerInfo)
 		}
 		Project.PlayerInfo = SortByAge(Project.PlayerInfo)
@@ -224,7 +239,7 @@ func (Controller Controller) Scoring(ctx *gin.Context, user tables.User) {
 
 	var err error
 	for _, PlayerInfo := range ScoringParams.PlayerInfo {
-		score := Controller.ScoringDB.SelectScore(ScoringParams.ProjectId, PlayerInfo.PlayerId)
+		score := Controller.ScoringDB.SelectScore(ScoringParams.ProjectId, PlayerInfo.PlayerId, user.ID)
 		score.ProjectId = ScoringParams.ProjectId
 		score.PlayerId = PlayerInfo.PlayerId
 		score.Score = PlayerInfo.Score

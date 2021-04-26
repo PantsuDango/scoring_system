@@ -50,3 +50,5 @@ CREATE TABLE `score` (
    PRIMARY KEY (`id`),
    UNIQUE KEY (`project_id`, `player_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='评分表';
+alter table `score` drop index `project_id`;
+alter table `score` add unique key (`project_id`, `player_id`, `judges_id`);
