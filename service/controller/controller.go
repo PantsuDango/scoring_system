@@ -283,18 +283,19 @@ func (Controller Controller) ModifyUser(ctx *gin.Context, user tables.User) {
 		return
 	}
 
-	if len(operator.OldPassword) == 0 || (operator.OldPassword+user.Salt) != user.Password {
-		JSONFail(ctx, http.StatusOK, AccessDeny, "OldPassword error.", gin.H{
-			"Code":    "InvalidJSON",
-			"Message": "OldPassword error.",
-		})
-		return
-	}
-
 	if len(operator.Password) > 0 {
-		user.Salt = GetRandomString(8)
-		s := operator.Password + user.Salt
-		user.Password = fmt.Sprintf("%x", md5.Sum([]byte(s)))
+		s := operator.OldPassword + user.Salt
+		if fmt.Sprintf("%x", md5.Sum([]byte(s))) == user.Password {
+			user.Salt = GetRandomString(8)
+			s := operator.Password + user.Salt
+			user.Password = fmt.Sprintf("%x", md5.Sum([]byte(s)))
+		} else {
+			JSONFail(ctx, http.StatusOK, PasswordError, "OldPassword error.", gin.H{
+				"Code":    "InvalidJSON",
+				"Message": "OldPassword error.",
+			})
+			return
+		}
 	}
 
 	if len(operator.Nick) > 0 {
